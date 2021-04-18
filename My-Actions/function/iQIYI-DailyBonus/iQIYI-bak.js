@@ -63,7 +63,7 @@ hostname= ifac*.iqiyi.com
 
 var LogDetails = false; // 响应日志
 
-var out = 0; // 超时 (毫秒) 如填写, 则不少于3000
+var out = 15000; // 超时 (毫秒) 如填写, 则不少于3000
 
 var $nobyda = nobyda();
 
@@ -96,6 +96,7 @@ function login() {
     }
     $nobyda.get(URL, function(error, response, data) {
       const Details = LogDetails ? data ? `response:\n${data}` : '' : ''
+      console.log(data)
       if (!error && data.match(/\"text\":\"\d.+?\u5230\u671f\"/)) {
         $nobyda.expire = data.match(/\"text\":\"(\d.+?\u5230\u671f)\"/)[1]
         console.log(`爱奇艺-查询成功: ${$nobyda.expire} ${Details}`)
@@ -118,13 +119,14 @@ function Checkin() {
         $nobyda.data = "签到失败: 接口请求出错 ‼️"
         console.log(`爱奇艺-${$nobyda.data} ${error}`)
       } else {
+        console.log(data)
         if(isJSON_test(data)){
           console.log(data)
         }
         const obj = JSON.parse(data)
         const Details = LogDetails ? `response:\n${data}` : ''
-        if (obj.msg == "成功") {
-          if (obj.data.signInfo.code == "A00000") {
+        if (obj.msg === "成功") {
+          if (obj.data.signInfo.code === "A00000") {
             var AwardName = obj.data.signInfo.data.rewards[0].name;
             var quantity = obj.data.signInfo.data.rewards[0].value;
             var continued = obj.data.signInfo.data.continueSignDaysSum;
@@ -158,10 +160,11 @@ function Lottery(s) {
           console.log(`爱奇艺-抽奖失败: 接口请求出错 ‼️ ${error} (${$nobyda.times})`)
           //$nobyda.notify("爱奇艺", "", $nobyda.data)
         } else {
+          console.log(data)
           const obj = JSON.parse(data);
           const Details = LogDetails ? `response:\n${data}` : ''
           $nobyda.last = data.match(/(机会|已经)用完/) ? true : false
-          if (obj.awardName && obj.code == 0) {
+          if (obj.awardName && obj.code === 0) {
             $nobyda.data += !$nobyda.last ? `\n抽奖成功: ${obj.awardName.replace(/《.+》/, "未中奖")} 🎉` : `\n抽奖失败: 今日已抽奖 ⚠️`
             console.log(`爱奇艺-抽奖明细: ${obj.awardName.replace(/《.+》/, "未中奖")} 🎉 (${$nobyda.times}) ${Details}`)
           } else if (data.match(/\"errorReason\"/)) {
